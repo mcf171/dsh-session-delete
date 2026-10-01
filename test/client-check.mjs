@@ -51,16 +51,25 @@ globalThis.fetch = async (url, options) => {
 	}
 }
 
+let shortcutCommand = null
 const ctx = {
 	effect: (fn) => { fn(); return () => { } },
-	locale: { register: () => () => { } },
+	locale: { register: () => () => { }, bind: () => (key) => key },
 	slots: {
 		inject: (name, callback) => { console.log(`3. slots.inject("${name}")`); callback() },
 		register: (spec, Component) => { registered = { spec, Component }; console.log(`4. slots.register id=${spec.id} order=${spec.order} locale=${spec.locale}`) },
 	},
 	sessions: {
-		list: { getSnapshot: () => ({ byId: { 'session-probe': { running: false } } }) },
+		list: { getSnapshot: () => ({ byId: { 'session-probe': { id: 'session-probe', title: 'probe', running: false, retainedBy: { mainView: 1 } } } }) },
 		refresh: async () => { log.push('REFRESH called') },
+	},
+	shortcuts: {
+		register: (command) => {
+			shortcutCommand = command
+			const binding = command.defaults['web:windows']
+			console.log(`4b. shortcuts.register id=${command.id} keys=${binding.modifiers.join('+')}+${binding.code}`)
+			return () => { }
+		},
 	},
 }
 
@@ -75,6 +84,7 @@ const props = {
 	sessionId: 'session-probe',
 	displayTitle: '询问AI是否支持识图',
 	useMenuOpenState: () => [true, (open) => { if (open === false) menuClosed = true }],
+	useShortcuts: (select) => select([{ id: 'session.delete', keys: ['Ctrl', 'Shift', 'Delete'] }]),
 	t: (key) => key,
 }
 let element
@@ -110,7 +120,7 @@ try {
 }
 
 // --- running session guard ---
-ctx.sessions.list.getSnapshot = () => ({ byId: { 'session-probe': { running: true } } })
+ctx.sessions.list.getSnapshot = () => ({ byId: { 'session-probe': { id: 'session-probe', title: 'probe', running: true, retainedBy: { mainView: 1 } } } })
 log.length = 0
 fetched = null
 try {
@@ -119,4 +129,28 @@ try {
 	console.log(`9. running guard: fetch=${fetched === null ? 'not called (correct)' : 'CALLED (wrong)'} log=${JSON.stringify(log)}`)
 } catch (error) {
 	console.log(`9. GUARD FAILED: ${error.message}`)
+}
+
+// --- icon: the shipped primitives are absent in this harness, so the entry
+//     must carry the inline fallback glyph rather than nothing ---
+const icon = element.children?.[0]
+console.log(`10. icon: ${icon === undefined ? 'MISSING' : icon.type === 'svg' ? 'inline svg fallback' : String(icon.type)}`)
+
+// --- keyboard command: registration, blocking, and the run path ---
+console.log(`11. shortcut registered: ${shortcutCommand !== null} (id=${shortcutCommand?.id})`)
+if (shortcutCommand !== null) {
+	ctx.sessions.list.getSnapshot = () => ({ byId: {} })
+	const blocked = shortcutCommand.resolve()
+	console.log(`12. no current session: ${blocked.status}${blocked.reason ? ` (${blocked.reason})` : ''}`)
+	ctx.sessions.list.getSnapshot = () => ({ byId: { 'session-probe': { id: 'session-probe', title: 'probe', running: false, retainedBy: { mainView: 1 } } } })
+	const handled = shortcutCommand.resolve()
+	console.log(`13. with a current session: ${handled.status}`)
+	if (handled.status === 'handled') {
+		log.length = 0
+		fetched = null
+		confirmAnswer = true
+		handled.run()
+		await new Promise(resolve => setTimeout(resolve, 50))
+		console.log(`    run(): fetch=${fetched === null ? 'NOT CALLED' : fetched.url} body=${fetched?.options?.body}`)
+	}
 }

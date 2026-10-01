@@ -23,7 +23,12 @@
       "platform": "web",
       "inject": [
         "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-shortcuts",
+        "@deepseek-ai/dsh-client-ui-primitives",
         "@deepseek-ai/dsh-client-ui-workspace"
+      ],
+      "external": [
+        "@deepseek-ai/dsh-client-ui-primitives/client"
       ]
     }
   },
