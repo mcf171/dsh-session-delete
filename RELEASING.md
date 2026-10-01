@@ -60,9 +60,40 @@ npm publish --access public
 | 项 | 本仓库状态 |
 |---|---|
 | `dsh.bundle` manifest | 有（`cordis.patch.yml`） |
-| 仓库年龄 ≥1 天、提交 ≥10 次 | 13 个提交；仓库创建于 2026-10-01 18:52 |
+| 仓库年龄 ≥1 天、提交 ≥10 次 | 15+ 个提交；仓库创建于 2026-10-01 18:52 |
 | `dsh-plugin` topic | 已添加 |
 | 索引文件位置 | `data/plugins/<owner>__<repo>.yml` |
+| 分类（category） | `session`（与同类条目一致：`dsh-session-rename`、`dsh-session-delete` 等） |
+
+## 3.5 索引仓库已预备好（2026-10-01）
+
+索引仓库已 clone 到 `D:\dsh-plugins\awesome-dsh-plugin`，改动做在分支
+`add-mcf171-dsh-session-delete` 上（`main` 与上游保持一致），remote 也已配好：
+
+| remote | 指向 |
+|---|---|
+| `origin` | `awesome-dsh-plugin/awesome-dsh-plugin`（上游） |
+| `myfork` | `mcf171/awesome-dsh-plugin`（你的 fork，**尚未创建**） |
+
+**明天（仓库满 1 天后）的执行顺序**
+
+```bash
+# 1) 先在网页上 fork：https://github.com/awesome-dsh-plugin/awesome-dsh-plugin
+#    （fork 完成后 myfork 这个地址才存在）
+
+# 2) 推插件仓库（本地比 GitHub 多几个提交）
+cd D:\dsh-plugins\dsh-session-delete
+git push
+
+# 3) 推索引分支到你的 fork
+cd D:\dsh-plugins\awesome-dsh-plugin
+git push -u myfork add-mcf171-dsh-session-delete
+
+# 4) 打开 https://github.com/mcf171/awesome-dsh-plugin
+#    页面会提示 "Compare & pull request"，按提示向上游提 PR（标题/正文见第 4 节）
+```
+
+> 不需要跑 `node scripts/generate-readme.mjs`：官方细则写明两个 README 在 PR 合并后由维护者重新生成。
 
 ## 4. PR 文案（可直接粘贴）
 
@@ -78,10 +109,10 @@ Add mcf171/dsh-session-delete
 Adds the session-delete plugin to the index.
 
 - Repo: https://github.com/mcf171/dsh-session-delete
-- Category: `ui`
+- Category: `session`
 - Declares `dsh.bundle.patch` in `package.json`
 - Carries the `dsh-plugin` topic
-- 14 commits; repository created 2026-10-01
+- Repository created 2026-10-01
 
 ### What it adds
 
