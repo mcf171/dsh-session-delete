@@ -1,4 +1,4 @@
-# dsh-session-delete
+# @mcf171/dsh-session-delete
 
 给 DeepSeek Harness（`dsh`）Web GUI 补上**永久删除会话**的动作。
 
@@ -32,26 +32,35 @@
 
 以 profile `web`（`<DSH_HOME>\profiles\web`）为例：
 
-1. **链接包**（junction，改源码即时生效）：
+1. **把包放进 profile 的 node_modules**（scoped 包位于 `@<scope>\` 子目录下）。复制最稳妥：
 
    ```powershell
-   New-Item -ItemType Junction `
-     -Path '<DSH_HOME>\profiles\web\node_modules\dsh-session-delete' `
-     -Target '<本目录>'
+   $dest = '<DSH_HOME>\profiles\web\node_modules\@mcf171\dsh-session-delete'
+   New-Item -ItemType Directory -Path (Split-Path $dest) -Force | Out-Null
+   Copy-Item '<本目录>' $dest -Recurse -Force
+   Remove-Item "$dest\.git" -Recurse -Force -ErrorAction SilentlyContinue
    ```
+
+   也可以用目录链接（改源码即时生效、不用重复复制）：
+
+   ```powershell
+   New-Item -ItemType Junction -Path $dest -Target '<本目录>'
+   ```
+
+   但**部分 Windows 环境会拒绝在该位置创建链接**（`Access denied`，`mklink /J` 同样失败）——遇到就退回复制，代价是改完代码要重新复制一次再重启。
 
 2. **登记依赖 + bundle**（`<DSH_HOME>\profiles\web\package.json`）：
 
    ```jsonc
    {
      "dependencies": {
-       "dsh-session-delete": "link:<本目录的绝对路径>"
+       "@mcf171/dsh-session-delete": "link:<本目录的绝对路径>"
      },
      "dsh": {
        "profile": {
          "bundles": [
            // …已有项…
-           "dsh-session-delete"
+           "@mcf171/dsh-session-delete"
          ]
        }
      }
@@ -64,11 +73,11 @@
 
 ## 卸载
 
-从 profile 的 `dsh.profile.bundles` 移除 `dsh-session-delete`，再删除 `node_modules\dsh-session-delete` 链接即可。
+从 profile 的 `dsh.profile.bundles` 移除 `@mcf171/dsh-session-delete`，再删除 `node_modules\@mcf171\dsh-session-delete` 即可。
 
 ## 维护提示
 
-- **`pnpm install` / 插件市场重装可能清掉 junction**（它不在 lockfile 的解析结果里）。若重启后菜单项消失，按上面的「安装」重做第 1、2 步即可。
+- **`pnpm install` / 插件市场重装可能清掉 profile 里的这份拷贝**（它不在 lockfile 的解析结果里）。若重启后菜单项消失，按上面的「安装」重做第 1、2 步即可。
 - **升级 DSH 后先确认插件仍在**：重启后菜单里有没有「删除会话」；没有就重新挂载。
 - 删除目标目录的算法必须与 `@deepseek-ai/dsh-session-persistence-jsonl` 的 `format.ts`（`projectKey` / `encodeSegment`）保持一致。升级后如怀疑路径规则变了，先跑自测：
 
