@@ -1,5 +1,5 @@
 {
-  "name": "dsh-session-delete",
+  "name": "@mcf171/dsh-session-delete",
   "version": "0.1.0",
   "description": "Permanently delete a session from the DeepSeek Harness web GUI: a row-menu action, a confirmation, and a host route that removes the session's log directory.",
   "type": "module",
