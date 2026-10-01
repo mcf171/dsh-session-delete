@@ -16,10 +16,14 @@ globalThis.window = {
 const log = []
 let confirmAnswer = false
 
+const listeners = new Map()
 globalThis.document = {
 	querySelector: () => null,
 	createElement: () => ({ dataset: {}, style: {}, textContent: '', appendChild() { }, setAttribute() { } }),
 	head: { appendChild: (tag) => { styleTags.push(tag) } },
+	activeElement: null,
+	addEventListener: (type, handler) => { listeners.set(type, handler) },
+	removeEventListener: (type) => { listeners.delete(type) },
 }
 
 const React = {
@@ -131,26 +135,45 @@ try {
 	console.log(`9. GUARD FAILED: ${error.message}`)
 }
 
-// --- icon: the shipped primitives are absent in this harness, so the entry
-//     must carry the inline fallback glyph rather than nothing ---
+// --- icon: drawn inline in this bundle, so it is present on every build ---
 const icon = element.children?.[0]
-console.log(`10. icon: ${icon === undefined ? 'MISSING' : icon.type === 'svg' ? 'inline svg fallback' : String(icon.type)}`)
+console.log(`10. icon: ${icon === undefined ? 'MISSING' : icon.type === 'svg' ? 'inline svg' : String(icon.type)}`)
 
-// --- keyboard command: registration, blocking, and the run path ---
-console.log(`11. shortcut registered: ${shortcutCommand !== null} (id=${shortcutCommand?.id})`)
-if (shortcutCommand !== null) {
-	ctx.sessions.list.getSnapshot = () => ({ byId: {} })
-	const blocked = shortcutCommand.resolve()
-	console.log(`12. no current session: ${blocked.status}${blocked.reason ? ` (${blocked.reason})` : ''}`)
-	ctx.sessions.list.getSnapshot = () => ({ byId: { 'session-probe': { id: 'session-probe', title: 'probe', running: false, retainedBy: { mainView: 1 } } } })
-	const handled = shortcutCommand.resolve()
-	console.log(`13. with a current session: ${handled.status}`)
-	if (handled.status === 'handled') {
-		log.length = 0
-		fetched = null
-		confirmAnswer = true
-		handled.run()
-		await new Promise(resolve => setTimeout(resolve, 50))
-		console.log(`    run(): fetch=${fetched === null ? 'NOT CALLED' : fetched.url} body=${fetched?.options?.body}`)
+// --- accelerator: the plain DOM key listener ---
+const keydown = listeners.get('keydown')
+console.log(`11. key listener installed: ${typeof keydown === 'function'}`)
+if (typeof keydown === 'function') {
+	const press = (overrides) => {
+		let prevented = false
+		keydown({
+			code: 'Delete', shiftKey: true, ctrlKey: true, metaKey: false, defaultPrevented: false,
+			preventDefault: () => { prevented = true }, ...overrides,
+		})
+		return prevented
 	}
+	ctx.sessions.list.getSnapshot = () => ({ byId: { 'session-probe': { id: 'session-probe', displayTitle: 'probe', running: false, retainedBy: { mainView: 1 } } } })
+	log.length = 0
+	fetched = null
+	confirmAnswer = true
+	const prevented = press({})
+	await new Promise(resolve => setTimeout(resolve, 50))
+	console.log(`12. Ctrl+Shift+Delete: fetch=${fetched === null ? 'NOT CALLED' : fetched.url} body=${fetched?.options?.body} prevented=${prevented}`)
+
+	fetched = null
+	press({ shiftKey: false, ctrlKey: false })
+	await new Promise(resolve => setTimeout(resolve, 20))
+	console.log(`13. bare Delete ignored: fetch=${fetched === null ? 'not called (correct)' : 'CALLED (wrong)'}`)
+
+	globalThis.document.activeElement = { tagName: 'INPUT', isContentEditable: false }
+	fetched = null
+	press({})
+	await new Promise(resolve => setTimeout(resolve, 20))
+	console.log(`14. while typing: fetch=${fetched === null ? 'not called (correct)' : 'CALLED (wrong)'}`)
+	globalThis.document.activeElement = null
+
+	ctx.sessions.list.getSnapshot = () => ({ byId: {} })
+	fetched = null
+	press({})
+	await new Promise(resolve => setTimeout(resolve, 20))
+	console.log(`15. no current session: fetch=${fetched === null ? 'not called (correct)' : 'CALLED (wrong)'}`)
 }
