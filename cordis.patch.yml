@@ -1,0 +1,10 @@
+# dsh-session-delete bundle patch — applied automatically when this package is
+# installed into a profile (the package declares `dsh.bundle.patch` in its
+# package.json, so the profile's bundles array owns the mount; never also add a
+# matching insert row to the profile's own cordis.patch.yml).
+#
+# Composes the host row of this package; the browser half rides the
+# `dsh.client` declaration in package.json.
+- insert:
+    - id: session-delete
+      name: 'dsh-session-delete'
