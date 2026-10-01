@@ -28,6 +28,12 @@
 - **内存残留**：`SessionStore`（`ctx.sessions`）只有 create/prepare/enter/announce/flush/get/list/fork，**没有移除**；`enter()` 虽然返回"含 store removal 的 detach disposer"，但只接受尚未入册的会话。所以打开过的会话对象会常驻到进程重启。这不影响使用——行已移除（归档 + 广播双重生效），也没有写入会去碰已删的日志。
 - **不要调 `sessions.refresh()`**：列表 = 持久化扫描 + **内存中的活会话**，删除后立刻刷新会把刚移除的行重新加回来。清理靠归档与广播，不靠刷新。
 
+## 界面与快捷键
+
+- **菜单项**：会话行 `⋯` 菜单里增加「删除会话」，左侧是官方 `IconTrashOutlineRegular` 的垃圾桶图标（路径数据逐条内联，与内置条目像素一致），右侧显示快捷键提示 `Delete`。危险色标注。
+- **快捷键 `Delete`**：作用于**当前选中的会话**，走的是与鼠标点击**完全相同**的流程（运行中拒绝 → 确认框 → 删除）。三种情况下不触发：焦点在输入框/可编辑区域、按的是带修饰键的 Delete（`Ctrl`/`Shift`/`Alt`/`Cmd`）、当前没有选中会话。
+- 不可撤销的操作由**确认框**把关，而不是靠组合键防误触。
+
 ## 设计取向
 
 只使用官方扩展点，不劫持界面：
@@ -36,6 +42,7 @@
 - **"运行中"的判断**：读官方会话列表计算运行状态点的同一信号 `agents.get(id).status === 'running'`——**只拦真正在跑回合的会话**；打开过但已空闲的会话仍可删除。
 - **删除动作**：走 `node:fs`，不经 shell；目标目录用持久化后端自己的 `projectKey` / `encodeSegment` 规则定位，并遵循 `DSH_HOME`（自定义 home 目录同样正确）。
 - **顺序**：先调官方 `workspaceRegistry.archiveSession`（持久隐藏），再删日志，最后广播官方的 `api-session/removed`。
+- **零新增依赖**：整份 client 端只 `require("react")`——图标是内联 SVG（官方 artwork），快捷键是原生 `keydown` 监听。这既是体积考虑，也是可靠性考虑：官方 `dsh-client-ui-primitives` 只是组件库（没有 `dsh.client`、也没有 `./client` 导出），把它写进 `dsh.client.inject`/`external` 会让整个 entry 无法激活。
 
 ## 安装（挂到某个 profile）
 
