@@ -1,0 +1,6 @@
+url: https://github.com/mcf171/dsh-session-delete
+name: mcf171/dsh-session-delete
+category: ui
+description:
+  en: Delete a session permanently from the DeepSeek Harness sidebar, with a confirmation and a running-turn guard.
+  zh: 在 DeepSeek Harness 侧边栏永久删除会话，带二次确认与运行中守卫。
