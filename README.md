@@ -28,6 +28,15 @@
 - **内存残留**：`SessionStore`（`ctx.sessions`）只有 create/prepare/enter/announce/flush/get/list/fork，**没有移除**；`enter()` 虽然返回"含 store removal 的 detach disposer"，但只接受尚未入册的会话。所以打开过的会话对象会常驻到进程重启。这不影响使用——行已移除（归档 + 广播双重生效），也没有写入会去碰已删的日志。
 - **不要调 `sessions.refresh()`**：列表 = 持久化扫描 + **内存中的活会话**，删除后立刻刷新会把刚移除的行重新加回来。清理靠归档与广播，不靠刷新。
 
+## 设计取向
+
+只使用官方扩展点，不劫持界面：
+
+- **UI**：注册到官方插槽 `sidebar.workspaces.session.menu.item`，**不监听也不改写侧边栏 DOM**（DOM 注入式实现会随官方 UI 改版失效）。
+- **"运行中"的判断**：读官方会话列表计算运行状态点的同一信号 `agents.get(id).status === 'running'`——**只拦真正在跑回合的会话**；打开过但已空闲的会话仍可删除。
+- **删除动作**：走 `node:fs`，不经 shell；目标目录用持久化后端自己的 `projectKey` / `encodeSegment` 规则定位，并遵循 `DSH_HOME`（自定义 home 目录同样正确）。
+- **顺序**：先调官方 `workspaceRegistry.archiveSession`（持久隐藏），再删日志，最后广播官方的 `api-session/removed`。
+
 ## 安装（挂到某个 profile）
 
 以 profile `web`（`<DSH_HOME>\profiles\web`）为例：

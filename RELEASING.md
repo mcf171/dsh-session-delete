@@ -81,7 +81,7 @@ Adds the session-delete plugin to the index.
 - Category: `ui`
 - Declares `dsh.bundle.patch` in `package.json`
 - Carries the `dsh-plugin` topic
-- 13 commits; repository created 2026-10-01
+- 14 commits; repository created 2026-10-01
 
 ### What it adds
 
@@ -90,6 +90,19 @@ session: it archives the id (the shipped durable hide), removes the session's
 JSONL log directory, and relays `api-session/removed` so the row leaves the
 sidebar immediately — no restart needed. Deleting the same session twice is
 idempotent, and a session whose agent is mid-turn is refused with a notice.
+
+### Implementation notes
+
+Built on the shipped extension points rather than on injected DOM:
+
+- The row action registers into `sidebar.workspaces.session.menu.item`; it does
+  not observe or patch the sidebar DOM.
+- The running guard reads the same signal the session list uses for its running
+  dot (`agents.get(id).status === 'running'`), so a session that was merely
+  opened once is still deletable.
+- Deletion is `node:fs` work (no shell command), and the log directory is
+  located with the persistence backend's own `projectKey` / `encodeSegment`
+  rules, honouring `DSH_HOME`.
 
 ### Note on the name
 
