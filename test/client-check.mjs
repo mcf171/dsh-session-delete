@@ -146,7 +146,7 @@ if (typeof keydown === 'function') {
 	const press = (overrides) => {
 		let prevented = false
 		keydown({
-			code: 'Delete', shiftKey: true, ctrlKey: true, metaKey: false, defaultPrevented: false,
+			code: 'Delete', shiftKey: false, ctrlKey: false, metaKey: false, altKey: false, defaultPrevented: false,
 			preventDefault: () => { prevented = true }, ...overrides,
 		})
 		return prevented
@@ -157,12 +157,17 @@ if (typeof keydown === 'function') {
 	confirmAnswer = true
 	const prevented = press({})
 	await new Promise(resolve => setTimeout(resolve, 50))
-	console.log(`12. Ctrl+Shift+Delete: fetch=${fetched === null ? 'NOT CALLED' : fetched.url} body=${fetched?.options?.body} prevented=${prevented}`)
+	console.log(`12. bare Delete: fetch=${fetched === null ? 'NOT CALLED' : fetched.url} body=${fetched?.options?.body} prevented=${prevented}`)
 
 	fetched = null
-	press({ shiftKey: false, ctrlKey: false })
+	press({ ctrlKey: true })
 	await new Promise(resolve => setTimeout(resolve, 20))
-	console.log(`13. bare Delete ignored: fetch=${fetched === null ? 'not called (correct)' : 'CALLED (wrong)'}`)
+	console.log(`13. Ctrl+Delete ignored: fetch=${fetched === null ? 'not called (correct)' : 'CALLED (wrong)'}`)
+
+	fetched = null
+	press({ shiftKey: true })
+	await new Promise(resolve => setTimeout(resolve, 20))
+	console.log(`13b. Shift+Delete ignored: fetch=${fetched === null ? 'not called (correct)' : 'CALLED (wrong)'}`)
 
 	globalThis.document.activeElement = { tagName: 'INPUT', isContentEditable: false }
 	fetched = null
