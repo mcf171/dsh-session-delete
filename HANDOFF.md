@@ -6,17 +6,17 @@
 
 `@mcf171/dsh-session-delete` —— 给 DSH 0.2.0 Web GUI 补上「永久删除会话」的插件。
 
-## 当前状态（2026-10-03）
+## 当前状态（2026-10-16 更新）
 
 | 项 | 状态 |
 |---|---|
 | 版本 | `0.1.0`，tag `v0.1.0`（已推送） |
 | GitHub | https://github.com/mcf171/dsh-session-delete —— 本地与远端同步，分支 `main` |
-| 市场索引 PR | [#6397](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/6397)，Open，等人工 review（上游通常 4~5 天合并） |
+| **市场收录** | ✅ **已发布**：PR #6397 于 2026-10-15 由维护者 `fkysly` 合并<br>页面 https://awesome-dsh-plugin.com/p/mcf171/dsh-session-delete/<br>安装 `dsh plugin --profile web add github:mcf171/dsh-session-delete` |
 | 本地源码 | `D:\dsh-plugins\dsh-session-delete\`（独立 git 仓库，**不在 workspace 内**） |
 | 安装形态 | **复制**到 `D:\dsh-020-home\profiles\web\node_modules\@mcf171\dsh-session-delete`（不是链接） |
 | 运行实例 | 3080，npm 模式（生产）：`python D:\DeepSeekHarness\workspace\restart-web.py` |
-| 索引分支预备 | `D:\dsh-plugins\awesome-dsh-plugin` 的 `add-mcf171-dsh-session-delete`（已 rebase 到上游） |
+| 索引仓库 | `D:\dsh-plugins\awesome-dsh-plugin`（本地 clone，可删；上游已收录本插件） |
 
 ## 改完代码怎么生效
 
@@ -37,10 +37,11 @@ node test/client-check.mjs      # 客户端全流程（渲染/点击/运行中�
 
 ## 待办
 
-- [ ] PR #6397 合并后市场列表自动出现，无需再操作
-- [ ] 若维护者要求修改：改 `data/plugins/mcf171__dsh-session-delete.yml`，再往同一分支推
-- [ ] 可选：发布 npm（`npm publish --access public`；npm 现在要求 2FA，需 OTP 或勾了 "Bypass 2FA" 的 granular token）
+- [x] ~~PR #6397 合并后市场列表自动出现~~ —— 已合并（2026-10-15），市场页面已上线
+- [ ] 可选：发布 npm（`npm publish --access public`；npm 现在要求 2FA，需 OTP 或勾了 "Bypass 2FA" 的 granular token）。不发布也能装：市场给的就是 `github:` 安装命令
 - [ ] 可选：把安装形态从复制改回链接（`D:\dsh-plugins\` 下建 junction 曾被系统拒绝，符号链接可以）
+- [ ] 可选：仓库加 badge / 截图（`screenshots.json` 放在本仓库，改它不需要再提 PR）
+- [ ] 若要发新版本：改 `package.json` 的 `version` → commit → `git tag -a vX.Y.Z` → `git push --follow-tags`；索引条目**无需**改动（市场按 URL 跟踪）
 
 ## 两个必须知道的坑
 
